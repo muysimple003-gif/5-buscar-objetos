@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador de Objetos - Oficina</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #003953 0%, #003953 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* ════════════════════════════════════════════════════════════════════
+           CONTENEDOR PRINCIPAL - ADAPTATIVO PARA PC Y CELULAR
+           ════════════════════════════════════════════════════════════════════ */
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 1080px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            margin: 20px auto;
+        }
+
+        /* En PC: altura fija 1080px */
+        @media (min-width: 1081px) {
+            .container {
+                height: 1080px;
+            }
+        }
+
+        /* En Celular Vertical: altura adaptativa con scroll */
+        @media (max-width: 1080px) and (orientation: portrait) {
+            .container {
+                height: auto;
+                max-height: 80vh;
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+            
+            .image-container {
+                width: 100vw;
+                min-width: 1080px;
+                margin-left: 50%;
+                transform: translateX(-50%);
+            }
+            
+            .image-container img {
+                width: 100%;
+                height: auto;
+            }
+            
+            .objects-list {
+                width: 90%;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+
+        /* En Celular Horizontal: scroll horizontal */
+        @media (max-width: 1080px) and (orientation: landscape) {
+            .container {
+                height: auto;
+                max-height: 80vh;
+                overflow-x: auto;
+                overflow-y: hidden;
+            }
+            
+            .image-container {
+                width: 1080px;
+                height: auto;
+                min-height: 100%;
+            }
+            
+            .image-container img {
+                width: 100%;
+                height: auto;
+            }
+            
+            .objects-list {
+                bottom: 100px;
+                max-height: 150px;
+                overflow-y: auto;
+            }
+        }
+
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .image-container img {
+            position: relative;
+            width: 1080px;
+            height: 1080px;
+            display: block;
+            user-select: none;
+        }
+
+        /* ════════════════════════════════════════════════════════════════════
+           RECUEADRO DE OBJETOS A BUSCAR - NO ESTORBA LA IMAGEN
+           ════════════════════════════════════════════════════════════════════ */
+        
+        /* ============================================
+        CÓMO MOVER EL RECUEADRO DE OBJETOS:
+        ============================================
+        Busca estas propiedades y cámbialas:
+        
+        top: 100px;        → Distancia desde ARRIBA (aumenta para bajar, disminuye para subir)
+        right: 20px;       → Distancia desde DERECHA (aumenta para mover izquierda, disminuye para mover derecha)
+        left: auto;        → Si quieres usar LEFT en vez de RIGHT, cambia a: left: 20px; right: auto;
+        bottom: auto;      → Si quieres usar BOTTOM, cambia a: bottom: 100px; top: auto;
+        
+        Ejemplos de posiciones:
+        - Arriba derecha (por defecto): top: 100px; right: 20px; left: auto; bottom: auto;
+        - Arriba izquierda: top: 100px; left: 20px; right: auto; bottom: auto;
+        - Abajo derecha: bottom: 100px; right: 20px; top: auto; left: auto;
+        - Abajo izquierda: bottom: 100px; left: 20px; top: auto; right: auto;
+        ============================================ */
+        
+        /* ============================================
+        CÓMO HACER EL RECUEADRO TRANSPARENTE:
+        ============================================
+        Busca esta propiedad y cámbiala:
+        
+        background: rgba(255, 255, 255, 0.92);
+        
+        Valores para transparencia:
+        - Completamente transparente: background: rgba(255, 255, 255, 0.0);
+        - Muy transparente (10%): background: rgba(255, 255, 255, 0.1);
+        - Semi-transparente (30%): background: rgba(255, 255, 255, 0.3);
+        - Poco transparente (70%): background: rgba(255, 255, 255, 0.7);
+        - Opaco (92%): background: rgba(255, 255, 255, 0.92); ← Actual
+        
+        Para fondo azul transparente:
+        - Azul muy transparente: background: rgba(0, 57, 83, 0.3);
+        - Azul semi-transparente: background: rgba(0, 57, 83, 0.6);
+        ============================================ */
+        
+        .objects-list {
+            position: absolute;
+            top: 100px;                    /* ← CAMBIA ESTO PARA MOVER VERTICALMENTE */
+            right: 20px;                   /* ← CAMBIA ESTO PARA MOVER HORIZONTALMENTE */
+            background: rgba(255, 255, 255, 0.92);  /* ← CAMBIA ESTO PARA TRANSPARENCIA */
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            max-width: 280px;
+            border: 2px solid #003953;     /* Azul #003953 */
+        }
+
+        .objects-list-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #003953;                /* Azul #003953 */
+            margin-bottom: 10px;
+            text-align: center;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #003953;  /* Azul #003953 */
+        }
+
+        .object-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .object-item:last-child {
+            border-bottom: none;
+        }
+
+        .object-icon {
+            width: 30px;
+            height: 30px;
+            background: rgba(238, 223, 14, 0.4);  /* Amarillo #EEDF0E con 40% opacidad */
+            border: 2px solid #EEDF0E;             /* Amarillo #EEDF0E */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            flex-shrink: 0;
+        }
+
+        .object-item.found .object-icon {
+            background: rgba(0, 255, 0, 0.4);  /* Verde al encontrar */
+            border-color: green;
+            color: green;
+        }
+
+        .object-name {
+            font-size: 13px;
+            color: #333;
+            font-weight: 500;
+            line-height: 1.3;
+        }
+
+        /* ════════════════════════════════════════════════════════════════════
+           PUNTOS/ZONAS DE OBJETOS - SE MUEVEN CON LA IMAGEN
+           ════════════════════════════════════════════════════════════════════ */
+        .object-zone {
+            position: absolute;
+            background: rgba(238, 223, 14, 0);  /* Amarillo #EEDF0E con 30% opacidad transparencia*/
+            border: 0px solid #EEDF0E;             /* Amarillo #EEDF0E */
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+
+        .object-zone.found {
+            background: rgba(0, 255, 0, 0.4);
+            border-color: green;
+            transform: scale(1.2);
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+
+        .object-zone::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+           
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            50% { transform: translate(-50%, -50%) scale(1.5); opacity: 0.5; }
+        }
+
+        /* ════════════════════════════════════════════════════════════════════
+           BOTÓN CONTINUAR
+           ════════════════════════════════════════════════════════════════════ */
+        
+        /* ============================================
+        CÓMO MOVER EL BOTÓN CONTINUAR:
+        ============================================
+        Busca estas propiedades y cámbialas:
+        
+        bottom: 30px;      → Distancia desde ABAJO (aumenta para subir, disminuye para bajar)
+        left: 50%;         → Posición horizontal (50% = centrado)
+        transform: translateX(-50%); → Para centrar exactamente
+        
+        Ejemplos de posiciones:
+        - Abajo centrado (por defecto): bottom: 30px; left: 50%; transform: translateX(-50%);
+        - Abajo izquierda: bottom: 30px; left: 30px; right: auto; transform: none;
+        - Abajo derecha: bottom: 30px; right: 30px; left: auto; transform: none;
+        - Arriba centrado: top: 30px; bottom: auto; left: 50%; transform: translateX(-50%);
+        ============================================ */
+        
+        /* ============================================
+        CÓMO HACER EL BOTÓN CONTINUAR TRANSPARENTE:
+        ============================================
+        Busca estas propiedades y cámbialas:
+        
+        background: linear-gradient(135deg, #003953 0%, #003953 100%);
+        
+        Valores para transparencia:
+        - Completamente transparente: background: rgba(0, 57, 83, 0.0);
+        - Muy transparente (20%): background: rgba(0, 57, 83, 0.2);
+        - Semi-transparente (50%): background: rgba(0, 57, 83, 0.5);
+        - Poco transparente (80%): background: rgba(0, 57, 83, 0.8);
+        - Opaco (100%): background: rgba(0, 57, 83, 1.0); ← Similar al actual
+        
+        Para quitar borde:
+        border: none;
+        
+        Para quitar sombra:
+        box-shadow: none;
+        ============================================ */
+        
+        .continue-button {
+		    position: absolute;
+            bottom: 30px;                  /* ← CAMBIA ESTO PARA MOVER VERTICALMENTE */
+            left: 50%;                     /* ← CAMBIA ESTO PARA MOVER HORIZONTALMENTE */
+            transform: translateX(-50%);   /* ← MANTÉN ESTO PARA CENTRAR */
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #EEDF0E 0%, #EEDF0E 100%);  /* Azul #003953 */ /* ← cambia color boton siguiente, color camnbia color texto */
+            color: #003953;
+            border: none;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 10px 30px rgba(0, 57, 83, 0.4);
+            transition: all 0.3s ease;
+            z-index: 100;
+            display: none;
+            opacity: 0;
+        }
+
+        .continue-button.visible {
+            display: block;
+            opacity: 1;
+        }
+
+        .continue-button:hover {
+            transform: translateX(-50%) scale(1.05);
+            box-shadow: 0 15px 40px rgba(0, 57, 83, 0.6);
+        }
+
+        /* ════════════════════════════════════════════════════════════════════
+           CONTADOR (0/4)
+           ════════════════════════════════════════════════════════════════════ */
+        
+        /* ============================================
+        CÓMO MOVER EL CONTADOR:
+        ============================================
+        Busca estas propiedades y cámbialas:
+        
+        top: 20px;         → Distancia desde ARRIBA
+        right: 20px;       → Distancia desde DERECHA
+        left: auto;        → Si quieres usar LEFT: left: 20px; right: auto;
+        bottom: auto;      → Si quieres usar BOTTOM: bottom: 20px; top: auto;
+        
+        Ejemplos de posiciones:
+        - Arriba derecha (por defecto): top: 20px; right: 20px; left: auto;
+        - Arriba izquierda: top: 20px; left: 20px; right: auto;
+        - Abajo derecha: bottom: 20px; top: auto; right: 20px;
+        - Abajo izquierda: bottom: 20px; top: auto; left: 20px; right: auto;
+        ============================================ */
+        
+        /* ============================================
+        CÓMO HACER EL CONTADOR TRANSPARENTE:
+        ============================================
+        Busca esta propiedad y cámbiala:
+        
+        background: rgba(255, 255, 255, 0.9);
+        
+        Valores para transparencia:
+        - Completamente transparente: background: rgba(255, 255, 255, 0.0);
+        - Muy transparente (20%): background: rgba(255, 255, 255, 0.2);
+        - Semi-transparente (50%): background: rgba(255, 255, 255, 0.5);
+        - Poco transparente (80%): background: rgba(255, 255, 255, 0.8);
+        - Opaco (90%): background: rgba(255, 255, 255, 0.9); ← Actual
+        
+        Para fondo azul transparente:
+        background: rgba(0, 57, 83, 0.5);
+        color: white;
+        ============================================ */
+        
+        .counter {
+            position: absolute;
+            top: 20px;                     /* ← CAMBIA ESTO PARA MOVER VERTICALMENTE */
+            right: 20px;                   /* ← CAMBIA ESTO PARA MOVER HORIZONTALMENTE */
+            background: rgba(255, 255, 255, 0.9);  /* ← CAMBIA ESTO PARA TRANSPARENCIA */
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+        }
+
+        /* ════════════════════════════════════════════════════════════════════
+           INSTRUCCIONES
+           ════════════════════════════════════════════════════════════════════ */
+        
+        /* ============================================
+        CÓMO MOVER LAS INSTRUCCIONES:
+        ============================================
+        Busca estas propiedades y cámbialas:
+        
+        top: 20px;         → Distancia desde ARRIBA
+        left: 50%;         → Posición horizontal (50% = centrado)
+        transform: translateX(-50%); → Para centrar exactamente
+        
+        Ejemplos de posiciones:
+        - Arriba centrado (por defecto): top: 20px; left: 50%; transform: translateX(-50%);
+        - Abajo centrado: bottom: 20px; top: auto; left: 50%; transform: translateX(-50%);
+        - Arriba izquierda: top: 20px; left: 20px; right: auto; transform: none;
+        - Arriba derecha: top: 20px; right: 20px; left: auto; transform: none;
+        ============================================ */
+        
+        /* ============================================
+        CÓMO HACER LAS INSTRUCCIONES TRANSPARENTES:
+        ============================================
+        Busca esta propiedad y cámbiala:
+        
+        background: rgba(255, 255, 255, 0.95);
+        
+        Valores para transparencia:
+        - Completamente transparente: background: rgba(255, 255, 255, 0.0);
+        - Muy transparente (20%): background: rgba(255, 255, 255, 0.2);
+        - Semi-transparente (50%): background: rgba(255, 255, 255, 0.5);
+        - Poco transparente (80%): background: rgba(255, 255, 255, 0.8);
+        - Opaco (95%): background: rgba(255, 255, 255, 0.95); ← Actual
+        
+        Para fondo azul transparente:
+        background: rgba(0, 57, 83, 0.6);
+        color: white;
+        ============================================ */
+        
+        .instructions {
+            position: absolute;
+            top: 20px;                     /* ← CAMBIA ESTO PARA MOVER VERTICALMENTE */
+            left: 50%;                     /* ← CAMBIA ESTO PARA MOVER HORIZONTALMENTE */
+            transform: translateX(-50%);   /* ← MANTÉN ESTO PARA CENTRAR */
+            background: rgba(255, 255, 255, 0.95);  /* ← CAMBIA ESTO PARA TRANSPARENCIA */
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 16px;
+            color: #666;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            text-align: center;
+            max-width: 90%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .status-message {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 20px;
+            font-weight: bold;
+            z-index: 200;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            text-align: center;
+        }
+
+        .status-message.show {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- CONTENEDOR DE IMAGEN + PUNTOS (TODO SE MUEVE JUNTO) -->
+        <div class="image-container" id="imageContainer">
+            <img src="imagen/fotoxd.png" alt="Oficina para buscar objetos" id="mainImage">
+            
+            <!-- ════════════════════════════════════════════════════════════════════
+                 AJUSTA LAS COORDENADAS DE CADA OBJETO SEGÚN TU IMAGEN
+                 ════════════════════════════════════════════════════════════════════
+                 
+                 CÓMO AJUSTAR COORDENADAS:
+                 ==========================
+                 Modifica TOP y LEFT de cada punto:
+                 
+                 top: [valor]px   → Distancia desde ARRIBA de la imagen
+                 left: [valor]px  → Distancia desde IZQUIERDA de la imagen
+                 
+                 Ejemplo:
+                 top: 300px; left: 400px; → Punto a 300px desde arriba, 400px desde izquierda
+                 
+                 TIPS:
+                 - Usa valores más pequeños para mover hacia arriba/izquierda
+                 - Usa valores más grandes para mover hacia abajo/derecha
+                 - Puedes usar la consola del navegador (F12) para ver coordenadas exactas
+                 ========================== -->
+            
+            <!-- a. Folleto de indebida participación -->
+            <div class="object-zone" 
+                 style="width: 220px; height: 180px; top: 810px; left: 650px;" 
+                 data-id="1"
+                 data-name="Folleto de indebida participación"
+                 data-desc="¡Bien! Aquí puedes ampliar la información y conocer la normatividad."></div>
+            
+            <!-- b. Impresora de la oficina (bien público) -->
+            <div class="object-zone" 
+                 style="width: 200px; height: 300px; top: 590px; left: 430px;" 
+                 data-id="2"
+                 data-name="Impresora de la oficina"
+                 data-desc="Ojo: los bienes públicos no se usan para hacer política."></div>
+            
+            <!-- c. Computador institucional (bien público) -->
+            <div class="object-zone" 
+                 style="width: 120px; height: 120px; top: 530px; left: 260px;" 
+                 data-id="3"
+                 data-name="Computador institucional"
+                 data-desc="Recuerda: nada de propaganda o proselitismo usando recursos públicos"></div>
+            
+            <!-- d. Reloj de pared -->
+            <div class="object-zone" 
+                 style="width: 100px; height: 100px; top: 270px; left: 130px;" 
+                 data-id="4"
+                 data-name="Reloj de pared"
+                 data-desc="En tiempo laboral, tu foco es el servicio público: no hagas política"></div>
+        </div>
+        
+        <!-- ════════════════════════════════════════════════════════════════════
+             RECUEADRO DE OBJETOS A BUSCAR - NO ESTORBA LA IMAGEN
+             ════════════════════════════════════════════════════════════════════ -->
+        <div class="objects-list" id="objectsList">
+            <div class="objects-list-title">🔍 Objetos a encontrar:</div>
+            <div class="object-item" id="item-1">
+                <div class="object-icon">1</div>
+                <div class="object-name">Folleto de indebida participación</div>
+            </div>
+            <div class="object-item" id="item-2">
+                <div class="object-icon">2</div>
+                <div class="object-name">Impresora de la oficina</div>
+            </div>
+            <div class="object-item" id="item-3">
+                <div class="object-icon">3</div>
+                <div class="object-name">Computador institucional</div>
+            </div>
+            <div class="object-item" id="item-4">
+                <div class="object-icon">4</div>
+                <div class="object-name">Reloj de pared</div>
+            </div>
+        </div>
+        
+        <!-- ════════════════════════════════════════════════════════════════════
+             BOTONES DE UI - SIEMPRE FIJOS Y VISIBLES (NO SE MUEVEN)
+             ════════════════════════════════════════════════════════════════════ -->
+        <div class="counter" id="counter">0/4</div>
+        <div class="instructions" id="instructions">¡Busca los 4 objetos ocultos en la oficina!</div>
+        <button class="continue-button" id="continueBtn">¡Siguiente!</button>
+        <div class="status-message" id="statusMessage"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const objectZones = document.querySelectorAll('.object-zone');
+            const objectItems = document.querySelectorAll('.object-item');
+            const counter = document.getElementById('counter');
+            const continueBtn = document.getElementById('continueBtn');
+            const statusMessage = document.getElementById('statusMessage');
+            const instructions = document.getElementById('instructions');
+            
+            let foundObjects = 0;
+            const totalObjects = objectZones.length;
+            
+            // Manejo de clics en zonas de objetos
+            objectZones.forEach(zone => {
+                zone.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    
+                    const objectId = this.dataset.id;
+                    
+                    if (!this.classList.contains('found')) {
+                        // Marcar zona como encontrada
+                        this.classList.add('found');
+                        
+                        // Marcar item en la lista como encontrado
+                        const item = document.getElementById(`item-${objectId}`);
+                        if (item) {
+                            item.classList.add('found');
+                        }
+                        
+                        foundObjects++;
+                        updateCounter();
+                        
+                        // Mostrar mensaje con nombre y descripción
+                        const name = this.dataset.name;
+                        const desc = this.dataset.desc;
+                        showStatusMessage(`${name}\n${desc}`);
+                        
+                        // Verificar si se encontraron todos
+                        if (foundObjects === totalObjects) {
+                            showContinueButton();
+                        }
+                    }
+                });
+            });
+            
+            function updateCounter() {
+                counter.textContent = `${foundObjects}/${totalObjects}`;
+            }
+            
+            function showContinueButton() {
+                continueBtn.classList.add('visible');
+                instructions.textContent = '¡Excelente! Has encontrado todos los objetos';
+            }
+            
+            function showStatusMessage(message) {
+                statusMessage.innerHTML = message.replace('\n', '<br>');
+                statusMessage.classList.add('show');
+                
+                setTimeout(() => {
+                    statusMessage.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Acción del botón continuar
+            continueBtn.addEventListener('click', function() {
+                alert('¡Felicidades! Has encontrado todos los objetos.\n\nHas completado la actividad correctamente.');
+                // window.location.href = 'siguiente.html';
+            });
+            
+            // Prevenir scroll en contenedor al hacer clic en zonas
+            document.querySelectorAll('.object-zone').forEach(zone => {
+                zone.addEventListener('touchstart', function(e) {
+                    e.stopPropagation();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
