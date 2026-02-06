@@ -201,76 +201,102 @@
             box-shadow: 0 15px 40px rgba(0, 57, 83, 0.6);
         }
 
-        .status-message {
+        /* VENTANA MODAL PARA MENSAJES */
+        .modal {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.8);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.4s ease;
+            position: relative;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f44336;
             color: white;
-            padding: 15px 30px;
-            border-radius: 15px;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
             font-size: 20px;
             font-weight: bold;
-            z-index: 200;
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background: #d32f2f;
+            transform: scale(1.1);
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #003953;
+            margin-bottom: 15px;
             text-align: center;
         }
 
-        .status-message.show {
-            opacity: 1;
+        .modal-desc {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+            text-align: center;
         }
 
-        /* ============================================
-        INSTRUCCIONES CLARAS PARA PERSONALIZAR
-        ============================================ */
-
-        /* PARA MOVER EL RECUEADRO DE OBJETOS:
-           El listado ahora está COMPLETAMENTE FUERA del contenedor de imagen.
-           Para ajustar su posición, modifica el margen en .objects-list:
-           - margin-bottom: 20px; → Espacio entre lista e imagen
-        */
-
-        /* PARA HACER TRANSPARENTE EL RECUEADRO:
-           En .objects-list cambia:
-           background: rgba(255, 255, 255, 0.0);  → Totalmente transparente
-           background: rgba(0, 57, 83, 0.3);       → Azul transparente
-        */
-
-        /* PARA MOVER EL BOTÓN CONTINUAR:
-           Cambia en .continue-button:
-           - bottom: 30px;  → Distancia desde ABAJO
-           - left: 50%;     → Para centrar (no cambiar)
-           - transform: translateX(-50%); → Para centrar (no cambiar)
-           
-           Ejemplo izquierda: bottom: 30px; left: 30px; right: auto; transform: none;
-        */
-
-        /* PARA HACER TRANSPARENTE EL BOTÓN:
-           En .continue-button cambia:
-           background: rgba(238, 223, 14, 0.0);  → Amarillo transparente total
-           background: rgba(238, 223, 14, 0.5);  → Amarillo 50% opaco
-        */
-
-        /* PARA MOVER EL CONTADOR:
-           Cambia en .counter:
-           - top: 20px;     → Distancia desde ARRIBA
-           - right: 20px;   → Distancia desde DERECHA
-        */
-
-        /* PARA MOVER LAS INSTRUCCIONES:
-           Cambia en .instructions:
-           - top: 20px;     → Distancia desde ARRIBA
-           - left: 50%;     → Para centrar (no cambiar)
-           - transform: translateX(-50%); → Para centrar (no cambiar)
-        */
+        .modal-new {
+            background: #EEDF0E;
+            border: 2px solid #003953;
+            padding: 8px 15px;
+            display: inline-block;
+            margin-top: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
     <!-- RECUEADRO DE OBJETOS - COMPLETAMENTE FUERA DEL CONTENEDOR DE IMAGEN -->
     <div class="objects-list" id="objectsList">
-        <div class="objects-list-title">🔍 Objetos a encontrar:</div>
+        <div class="objects-list-title"> Busca los objetos:</div>
         <div class="object-item" id="item-1">
             <div class="object-icon">1</div>
             <div class="object-name">Folleto de indebida participación</div>
@@ -310,7 +336,7 @@
                      data-desc="Ojo: los bienes públicos no se usan para hacer política."></div>
                 
                 <div class="object-zone" 
-                     style="width: 120px; height: 120px; top: 530px; left: 260px;" 
+                     style="width: 220px; height: 200px; top: 510px; left: 210px;" 
                      data-id="3"
                      data-name="Computador institucional"
                      data-desc="Recuerda: nada de propaganda o proselitismo usando recursos públicos"></div>
@@ -327,7 +353,16 @@
         <div class="counter" id="counter">0/4</div>
         <div class="instructions" id="instructions">¡Busca los 4 objetos ocultos en la oficina!</div>
         <a href="https://muysimple003-gif.github.io/E6/" class="continue-button" id="continueBtn">¡Siguiente!</a>
-        <div class="status-message" id="statusMessage"></div>
+    </div>
+
+    <!-- VENTANA MODAL -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">×</button>
+            <div class="modal-title" id="modalTitle"></div>
+            <div class="modal-desc" id="modalDesc"></div>
+            <div class="modal-new" id="modalNew"></div>
+        </div>
     </div>
 
     <script>
@@ -336,8 +371,11 @@
             const objectItems = document.querySelectorAll('.object-item');
             const counter = document.getElementById('counter');
             const continueBtn = document.getElementById('continueBtn');
-            const statusMessage = document.getElementById('statusMessage');
             const instructions = document.getElementById('instructions');
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalDesc = document.getElementById('modalDesc');
+            const modalNew = document.getElementById('modalNew');
             
             let foundObjects = 0;
             const totalObjects = objectZones.length;
@@ -347,39 +385,52 @@
                 zone.addEventListener('click', function(e) {
                     e.stopPropagation();
                     
+                    const objectId = this.dataset.id;
+                    const name = this.dataset.name;
+                    const desc = this.dataset.desc;
+                    
+                    // Mostrar modal con información
+                    modalTitle.textContent = name;
+                    modalDesc.textContent = desc;
+                    
+                    // Verificar si es nuevo o ya encontrado
                     if (!this.classList.contains('found')) {
                         this.classList.add('found');
-                        
-                        const objectId = this.dataset.id;
                         const item = document.getElementById(`item-${objectId}`);
                         if (item) item.classList.add('found');
                         
                         foundObjects++;
                         counter.textContent = `${foundObjects}/${totalObjects}`;
                         
-                        // Mostrar mensaje
-                        const name = this.dataset.name;
-                        const desc = this.dataset.desc;
-                        statusMessage.innerHTML = `${name}<br>${desc}`;
-                        statusMessage.classList.add('show');
-                        setTimeout(() => statusMessage.classList.remove('show'), 3000);
+                        modalNew.textContent = '¡Nuevo objeto encontrado!';
+                        modalNew.style.display = 'block';
                         
                         // Mostrar botón si se encontraron todos
                         if (foundObjects === totalObjects) {
                             continueBtn.classList.add('visible');
                             instructions.textContent = '¡Excelente! Has encontrado todos los objetos';
                         }
+                    } else {
+                        modalNew.textContent = 'Objeto ya encontrado';
+                        modalNew.style.display = 'none';
                     }
+                    
+                    // Mostrar modal
+                    modal.classList.add('show');
                 });
             });
             
-            // Prevenir scroll en contenedor al hacer clic en zonas
-            document.querySelectorAll('.object-zone').forEach(zone => {
-                zone.addEventListener('touchstart', function(e) {
-                    e.stopPropagation();
-                });
-            });
+            // Cerrar modal
+            window.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.classList.remove('show');
+                }
+            };
         });
+        
+        function closeModal() {
+            document.getElementById('modal').classList.remove('show');
+        }
     </script>
 </body>
 </html>
